@@ -221,7 +221,7 @@ global:
 
 vcenter_operator:
     username:
-    pbm_enabled: false
+    pbm_enabled: "false"
 
     vcenter_exporter:
       enabled: DEFINED-IN-REGION-CHART
