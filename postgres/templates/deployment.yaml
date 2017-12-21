@@ -67,13 +67,12 @@ spec:
             - name: PGDATA
               value: /postgresql-data/data/
             - name: POSTGRES_USER
-              value: {{.Values.user}}
+              value: {{ .Values.user | quote }}
             - name: POSTGRES_PASSWORD
-              value: {{.Values.password}}
-
+              value: {{.Values.password | default (tuple . .Values.user | include "postgres.password_for_user" ) | quote }}
           ports:
             - name: postgres
-              containerPort: {{.Values.port_private}}
+              containerPort: {{ .Values.port_private }}
           volumeMounts:
             - name: postgres-persistent-storage
               mountPath: /postgresql-data

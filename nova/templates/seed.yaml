@@ -41,7 +41,7 @@ spec:
         role: cloud_compute_admin
     - name: nova
       description: Nova Service
-      #password: {{ .Values.global.nova_service_password }}
+      password: {{ .Values.global.nova_service_password | default (tuple . .Values.global.nova_service_user | include "identity.password_for_user") | quote }}
       roles:
       - project: service
         role: service
@@ -53,7 +53,7 @@ spec:
         role: cloud_compute_admin
     - name: nova_nanny
       description: Nova Nanny
-      password: {{ derivePassword 1 "long" .Values.global.master_password "nova_nanny" (include "keystone_api_endpoint_host_public" .) }}
+      password: {{ tuple . "nova_nanny" | include "identity.password_for_user" }}
     groups:
     - name: administrators
       roles:

@@ -10,17 +10,46 @@
 
 {{define "horizon_endpoint_host"}}horizon-3.{{.Values.global.region}}.{{.Values.global.tld}}{{end}}
 
+{{- define "identity.password_for_user"}}
+    {{- $envAll := index . 0 }}
+    {{- $user := index . 1 }}
+    {{- with $envAll -}}
+        {{- derivePassword 1 "long" .Values.global.master_password (print $user .Values.global.user_suffix) (include "keystone_api_endpoint_host_public" .) | trim }}
+    {{- end }}
+{{- end}}
 
-{{define "db_url" }}
+{{- define "postgres.password_for_user"}}
+    {{- $envAll := index . 0 }}
+    {{- $user := index . 1 }}
+    {{- with $envAll -}}
+        {{- derivePassword 1 "long" .Values.global.master_password (print $user .Values.global.user_suffix) (include "db_host" .) | trim }}
+    {{- end }}
+{{- end}}
+
+{{define "db_host"}}
     {{- if kindIs "map" . -}}
-postgresql://{{.Values.db_user}}:{{.Values.db_password}}@postgres-{{.Chart.Name}}.{{.Release.Namespace}}.svc.kubernetes.{{.Values.global.region}}.{{.Values.global.tld}}:{{.Values.postgres.port_public}}/{{.Values.db_name}}
+postgres-{{.Chart.Name}}.{{.Release.Namespace}}.svc.kubernetes.{{.Values.global.region}}.{{.Values.global.tld}}
     {{- else }}
         {{- $envAll := index . 0 }}
         {{- $name := index . 1 }}
         {{- $user := index . 2 }}
         {{- $password := index . 3 }}
         {{- with $envAll -}}
-postgresql://{{$user}}:{{$password}}@postgres-{{.Chart.Name}}.{{.Release.Namespace}}.svc.kubernetes.{{.Values.global.region}}.{{.Values.global.tld}}:{{.Values.postgres.port_public}}/{{$name}}
+postgres-{{.Chart.Name}}.{{.Release.Namespace}}.svc.kubernetes.{{.Values.global.region}}.{{.Values.global.tld}}
+        {{- end }}
+    {{- end -}}
+{{end}}
+
+{{define "db_url" }}
+    {{- if kindIs "map" . -}}
+postgresql://{{.Values.db_user}}:{{.Values.db_password | default (tuple . .Values.db_user | include "postgres.password_for_user") }}@{{include "db_host" . }}:{{.Values.postgres.port_public}}/{{.Values.db_name}}
+    {{- else }}
+        {{- $envAll := index . 0 }}
+        {{- $name := index . 1 }}
+        {{- $user := index . 2 }}
+        {{- $password := index . 3 }}
+        {{- with $envAll -}}
+postgresql://{{$user}}:{{$password | default (tuple . $user | include "postgres.password_for_user") -}}@{{include "db_host" . }}:{{.Values.postgres.port_public}}/{{$name}}
         {{- end }}
     {{- end -}}
 ?connect_timeout=10&keepalives_idle=5&keepalives_interval=5&keepalives_count=10

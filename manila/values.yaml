@@ -48,7 +48,7 @@ shares: {}
 
 db_name: manila
 db_user: manila
-db_password: DEFINED-IN-REGION-CHART
+db_password: null
 
 share_server_cleanup_interval: 60
 
@@ -60,7 +60,7 @@ pg_metrics:
   name: manila
   db_name: manila
   db_user: manila
-  db_password: DEFINED-IN-REGION-CHART
+  db_password: null
   customMetrics:
     openstack_manila_share_servers:
       query: "SELECT host, share_network_id, status, COUNT(*) AS count_gauge FROM share_servers GROUP BY host, share_network_id, status"

@@ -39,7 +39,7 @@ spec:
         imagePullPolicy: {{ default "IfNotPresent" .Values.imagePullPolicy | quote }}
         env:
           - name: DATA_SOURCE_NAME
-            value: "postgresql://{{ .Values.db_user }}:{{ .Values.db_password }}@{{ include (print $.Values.name "_db_host") . }}:{{ .Values.global.postgres_port_public }}/{{ .Values.db_name }}?sslmode=disable"
+            value: "postgresql://{{ .Values.db_user }}:{{ .Values.db_password | default (tuple . .Values.db_user | include "postgres.password_for_user") }}@{{ include (print $.Values.name "_db_host") . }}:{{ .Values.global.postgres_port_public }}/{{ .Values.db_name }}?sslmode=disable"
         ports:
           - name: metrics
             containerPort: {{ .Values.port_metrics }}

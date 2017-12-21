@@ -11,7 +11,6 @@ metadata:
 data:
   db-maintain.sh: |
     #!/usr/bin/env bash
-
     data_dir=/postgresql-data/data
 
     cp /postgresql-conf/postgresql.conf  $data_dir/postgresql.conf
@@ -19,10 +18,17 @@ data:
 
     export PGUSER=postgres
     psql <<- EOSQL
-
-        ALTER ROLE {{.Values.db_user}} WITH ENCRYPTED PASSWORD '{{.Values.db_password}}';
-        ALTER ROLE {{.Values.inspector_db_user}} WITH ENCRYPTED PASSWORD '{{.Values.inspector_db_password}}';
-        ALTER ROLE {{.Values.postgres.user}} WITH ENCRYPTED PASSWORD '{{.Values.postgres.password}}';
-
+        CREATE OR REPLACE FUNCTION upsert_user(user text, password text) returns void AS $$
+        BEGIN
+            CREATE ROLE user WITH ENCRYPTED PASSWORD password LOGIN;
+        EXCEPTION
+        WHEN duplicate_object THEN
+            ALTER ROLE user WITH ENCRYPTED PASSWORD password;
+        END$$ LANGUAGE plpgsql;
+        SELECT upsert_user('{{.Values.db_user}}{{.Values.global.user_suffix}}', '{{.Values.db_password | default (tuple . .Values.db_user | include "postgres.password_for_user")}}');
+        GRANT ALL PRIVILEGES ON DATABASE '{{.Values.db_name}}' TO '{{.Values.db_user}}{{.Values.global.user_suffix}}';
+        SELECT upsert_user('{{.Values.inspector_db_user}}{{.Values.global.user_suffix}}', '{{.Values.inspector_db_password | default (tuple . .Values.inspector_db_user | include "postgres.password_for_user")}}');
+        GRANT ALL PRIVILEGES ON DATABASE '{{.Values.inspector_db_name}}' TO '{{.Values.inspector_db_user}}{{.Values.global.user_suffix}}';
+        SELECT upsert_user('{{.Values.postgres.user}}', '{{.Values.postgres.password | default (tuple . .Values.postgres.user | include "postgres.password_for_user")}}');
     EOSQL
 {{ end -}}

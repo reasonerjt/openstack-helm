@@ -5,7 +5,7 @@ global:
 
 db_name: DEFINED-IN-COMPONENT-CHART
 db_user: DEFINED-IN-COMPONENT-CHART
-db_password: DEFINED-IN-COMPONENT-CHART
+db_password: null
 # DEFINED-IN-COMPONENT-CHART, named nova to make linter happy
 name: nova
 
